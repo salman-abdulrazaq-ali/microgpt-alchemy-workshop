@@ -23,13 +23,17 @@ CS312 [Deep Learning Alchemy](https://deep-learning-alchemy.github.io/).
 | 2 | + a richer featurizer, [`my_model.py`](my_model.py): every layer's last-token **and** mean-over-tokens vectors | 69.4% | 65.1% |
 | 3 | + 4,500 more steps of the same model (`init_from`), reading 3× more text | 70.0% | **66.0%** |
 
+Step 1 changed several settings at once (tokenizer, window, model size, data), so its +9 points is their combined
+effect; steps 2 and 3 each changed one thing.
+
 ![train/loss against the step for the first run and the continued run](docs/figures/our_loss.png)
 
 ### Why it works
 
 - **The model now reads the whole sentence.** The defaults keep only the last 31 *characters* of each SST
   sentence. With BPE and a 64-token window, nearly every sentence fits.
-- **More text, more sentiment.** IMDB has about 29× more text than SST. To predict the next word of a review well,
+- **More text, more sentiment.** IMDB's training reviews have about 83× more text than SST's training sentences
+  (57.9M vs 0.7M characters). To predict the next word of a review well,
   the model has to track whether the review is positive. It learns sentiment without seeing a label.
 - **Sentiment is spread across the model.** The default probe reads one vector: the last token of the last layer.
   Our featurizer gives the probe every layer, both at the last token and averaged over the sentence. The L1 probe keeps
@@ -41,7 +45,7 @@ CS312 [Deep Learning Alchemy](https://deep-learning-alchemy.github.io/).
 - Features come only from our own model. The staff model was never used for our score.
 - `fit_probe` and `evaluate_probe` are unchanged (`git diff main -- microgpt/probe.py` is empty).
 
-### Reproduce (about 10 minutes on a MacBook Air M4)
+### Reproduce (about 7 minutes of training on a MacBook Air M4, plus a few minutes of data loading and scoring)
 
 ```
 python3 -m microgpt.train backend=torch data.tokenizer=bpe data.vocab_size=8000 model.num_layers=2 \
